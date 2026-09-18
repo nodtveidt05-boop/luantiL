@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: fedora:latest
+    container: fedora:43
     steps:
       - name: Instalar dependências
         run: |
