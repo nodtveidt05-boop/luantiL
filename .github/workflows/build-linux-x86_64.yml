@@ -1,0 +1,40 @@
+name: build-linux-x86_64
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - name: Instalar dependências
+        run: |
+          dnf install -y git tar gzip make automake gcc gcc-c++ kernel-devel cmake \
+            libcurl-devel openal-soft-devel libpng-devel libjpeg-devel libvorbis-devel \
+            libogg-devel freetype-devel mesa-libGL-devel zlib-devel jsoncpp-devel \
+            gmp-devel sqlite-devel luajit-devel leveldb-devel ncurses-devel \
+            spatialindex-devel libzstd-devel gettext SDL2-devel
+
+      - uses: actions/checkout@v4
+
+      - name: Compilar
+        run: |
+          cmake . -DRUN_IN_PLACE=TRUE -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
+
+      - name: Empacotar
+        run: |
+          mkdir luanti-linux-x86_64
+          for d in bin builtin client clientmods fonts games locale mods textures worlds; do
+            [ -e "$d" ] && cp -r "$d" luanti-linux-x86_64/
+          done
+          cp LICENSE.txt COPYING.LESSER minetest.conf.example luanti-linux-x86_64/
+          tar czf luanti-linux-x86_64.tar.gz luanti-linux-x86_64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: luanti-linux-x86_64
+          path: luanti-linux-x86_64.tar.gz
